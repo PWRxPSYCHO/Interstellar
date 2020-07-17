@@ -16,7 +16,6 @@ client.on('message', msg => {
     if (msg.content.startsWith('!')) {
         const req = setAPODReq();
         getAPODReq(req, msg);
-        msg.channel.send('Pong!');
     }
 });
 
@@ -34,7 +33,6 @@ function setAPODReq(): ApodRequest {
 function getAPODReq(req: ApodRequest, msg: Message) {
     let apodResponse: APODResponse;
     const url = 'https://api.nasa.gov/planetary/apod?' + 'api_key=' + req.api_key + '&' + 'date=' + req.date + '&' + 'hd=' + req.hd;
-    console.log(url);
     Axios.get(url).then(resp => {
         if (resp.status === 200) {
             console.log('Succesful. Processing now...');
