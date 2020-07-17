@@ -1,5 +1,5 @@
 export interface ApodRequest {
-    apiKey: string;
-    date?: Date;
-    hd: boolean;
+    api_key: string;
+    date: string;
+    hd: string;
 }
