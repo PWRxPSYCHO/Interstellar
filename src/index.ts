@@ -19,7 +19,7 @@ cron.schedule('0 12 * * 0-6', async () => { // At 12:00 on every day-of-week fro
     const req: ApodRequest = {
         api_key: nasaToken,
         date: todaysDate,
-        hd: 'True'
+        hd: true
     }
     await getAPODReq(req, client.channels);
 });
