@@ -9,12 +9,12 @@ import { ULResponse } from './models/SpaceX/UL-Response';
 
 const client = new Client();
 
+let prevULResp: ULResponse[];
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
 });
 client.on('message', (msg) => {
-    if(msg.content.startsWith('!')){
-        getULRequest(client.channels);
+    if (msg.content.startsWith('!')) {
     }
 });
 
@@ -39,17 +39,34 @@ cron.schedule('0 10 * * 0-6', async () => {
 async function getULRequest(channels: ChannelManager) {
     const channel = await channels.fetch(chID) as TextChannel;
     const reqURL = 'https://api.spacexdata.com/v3/launches/upcoming';
-    const resp = await Axios.get(reqURL);
-    if (resp.status === 200) {
-        const ulResp = resp.data as ULResponse[];
-        console.log('Successful. Processing now..');
-        const today = new Date().toISOString();
-        const filteredResp = ulResp.filter(upcoming => upcoming.launch_date_utc >= today);
-        let nextMission = filteredResp[0];
-        processULResponse(nextMission, channel);
-    } else {
-        apiError(resp, channel);
+    let nextMission;
+    if (!prevULResp) {
+        const resp = await Axios.get(reqURL);
+        if (resp.status === 200) {
+            const ulResp = resp.data as ULResponse[];
+            console.log('Successful. Processing now..');
+            const today = new Date().toISOString();
+            const filteredResp = ulResp.filter(upcoming => upcoming.launch_date_utc >= today);
+            nextMission = filteredResp[0];
+            prevULResp = filteredResp;
+            processULResponse(nextMission, channel);
+        } else {
+            const resp = await Axios.get(reqURL);
+            if (resp.status === 200) {
+                const ulResp = resp.data as ULResponse[];
+                console.log('Successful. Processing now..');
+                const today = new Date().toISOString();
+                const filteredResp = ulResp.filter(upcoming => upcoming.launch_date_utc >= today);
+                nextMission = filteredResp[0];
+                if (isUpdated(prevULResp, filteredResp)) {
+                    processULResponse(nextMission, channel);
+                    prevULResp = filteredResp;
+                }
+            } else {
+                apiError(resp, channel);
+            }
 
+        }
     }
 }
 
@@ -91,6 +108,13 @@ async function processAPODResponse(resp: APODResponse, channel: TextChannel) {
     embed.setDescription(resp.explanation);
     channel.send(embed);
 }
+function isUpdated(prevResponse: ULResponse[], currentResponse: ULResponse[]): boolean {
+    if (prevResponse === currentResponse) {
+        return false;
+    } else {
+        return true;
+    }
+}
 
 async function processULResponse(resp: ULResponse, channel: TextChannel) {
     const embed = new MessageEmbed();
@@ -98,7 +122,7 @@ async function processULResponse(resp: ULResponse, channel: TextChannel) {
     embed.setColor(0x4286f4);
     embed.setDescription(resp.details);
     embed.setURL(resp.links.reddit_campaign);
-    embed.setFooter(resp.launch_date_local);
+    embed.setFooter('Launch Date: ' + resp.launch_date_local);
     channel.send(embed);
 }
 client.login(token);
