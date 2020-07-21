@@ -15,6 +15,7 @@ client.on('ready', () => {
 });
 client.on('message', (msg) => {
     if (msg.content.startsWith('!')) {
+       // getULRequest(client.channels);
     }
 });
 
@@ -122,7 +123,12 @@ async function processULResponse(resp: ULResponse, channel: TextChannel) {
     embed.setColor(0x4286f4);
     embed.setDescription(resp.details);
     embed.setURL(resp.links.reddit_campaign);
-    embed.setFooter('Launch Date: ' + resp.launch_date_local);
+    if (resp.links.video_link) {
+        embed.addField('YouTube: ', resp.links.video_link);
+    }
+    embed.addField('Rocket: ', resp.rocket.rocket_name);
+    const date = moment(resp.launch_date_local).format('MMMM Do YYYY, h:mm:ss a');
+    embed.setFooter('Launch Date: ' + date);
     channel.send(embed);
 }
 client.login(token);
