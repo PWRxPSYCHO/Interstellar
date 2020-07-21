@@ -1,12 +1,12 @@
 import { Client, MessageEmbed, Message, ChannelManager, TextChannel } from 'discord.js';
 import { token, nasaToken, chID } from './models/config';
-import { APODResponse } from './models/apod-response';
+import { APODResponse } from './models/APOD/apod-response';
 import Axios from 'axios';
-import { ApodRequest } from './models/apod-request';
+import { ApodRequest } from './models/APOD/apod-request';
 import moment from 'moment';
+import cron from 'node-cron';
 
 const client = new Client();
-var cron = require('node-cron');
 
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
