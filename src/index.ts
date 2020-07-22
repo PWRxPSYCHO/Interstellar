@@ -1,15 +1,24 @@
 import { Client, MessageEmbed, Message, ChannelManager, TextChannel } from 'discord.js';
 import { token, nasaToken, chID } from './models/config';
-import { APODResponse } from './models/apod-response';
+import { APODResponse } from './models/APOD/apod-response';
 import Axios from 'axios';
-import { ApodRequest } from './models/apod-request';
+import { ApodRequest } from './models/APOD/apod-request';
 import moment from 'moment';
+import cron from 'node-cron';
+import { ULResponse } from './models/SpaceX/UL-Response';
 
 const client = new Client();
-var cron = require('node-cron');
 
+let ulCron: string;
+
+let prevULResp: ULResponse[];
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
+});
+client.on('message', (msg) => {
+    if (msg.content.startsWith('!')) {
+        // getULRequest(client.channels);
+    }
 });
 
 cron.schedule('0 12 * * 0-6', async () => { // At 12:00 on every day-of-week from Sunday through Saturday.
@@ -23,6 +32,45 @@ cron.schedule('0 12 * * 0-6', async () => { // At 12:00 on every day-of-week fro
     }
     await getAPODReq(req, client.channels);
 });
+
+cron.schedule('* * * * *', async () => {
+    await getULRequest(client.channels);
+
+});
+
+async function getULRequest(channels: ChannelManager) {
+    const channel = await channels.fetch(chID) as TextChannel;
+    const reqURL = 'https://api.spacexdata.com/v3/launches/upcoming';
+    let nextMission;
+    if (!prevULResp) {
+        const resp = await Axios.get(reqURL);
+        if (resp.status === 200) {
+            const ulResp = resp.data as ULResponse[];
+            console.log('Successful. Processing now..');
+            const today = new Date().toISOString();
+            const filteredResp = ulResp.filter(upcoming => upcoming.launch_date_utc >= today);
+            nextMission = filteredResp[0];
+            prevULResp = filteredResp;
+            processULResponse(nextMission, channel);
+        } else {
+            const resp = await Axios.get(reqURL);
+            if (resp.status === 200) {
+                const ulResp = resp.data as ULResponse[];
+                console.log('Successful. Processing now..');
+                const today = new Date().toISOString();
+                const filteredResp = ulResp.filter(upcoming => upcoming.launch_date_utc >= today);
+                nextMission = filteredResp[0];
+                if (isUpdated(prevULResp, filteredResp)) {
+                    processULResponse(nextMission, channel);
+                    prevULResp = filteredResp;
+                }
+            } else {
+                apiError(resp, channel);
+            }
+
+        }
+    }
+}
 
 async function getAPODReq(req: ApodRequest, channels: ChannelManager) {
     const channel = await channels.fetch(chID) as TextChannel;
@@ -38,25 +86,50 @@ async function getAPODReq(req: ApodRequest, channels: ChannelManager) {
                 title: resp.data.title,
                 url: resp.data.url
             };
-            processResponse(apodResponse, channel);
+            processAPODResponse(apodResponse, channel);
         } else {
-            console.log('Status Code: ' + resp.status);
-            const embedMessage = new MessageEmbed();
-            embedMessage.setTitle('Failed to fetch APOD!');
-            embedMessage.setColor(0xFF0000);
-            embedMessage.setThumbnail('https://s3.amazonaws.com/digitaltrends-uploads-prod/2015/08/black-hole.jpg');
-            embedMessage.setDescription('Code: ' + (resp && resp.status));
-            channel.send(embedMessage);
+            apiError(resp, channel);
         }
     });
 }
-async function processResponse(resp: APODResponse, channel: TextChannel) {
+function apiError(resp, channel: TextChannel) {
+    console.log('Status Code: ' + resp.status);
+    const embedMessage = new MessageEmbed();
+    embedMessage.setTitle('Failed to fetch APOD!');
+    embedMessage.setColor(0xFF0000);
+    embedMessage.setThumbnail('https://s3.amazonaws.com/digitaltrends-uploads-prod/2015/08/black-hole.jpg');
+    embedMessage.setDescription('Code: ' + (resp.status));
+    channel.send(embedMessage);
+}
+
+async function processAPODResponse(resp: APODResponse, channel: TextChannel) {
     const embed = new MessageEmbed();
     embed.setTitle(resp.title);
     embed.setColor(0x4286f4);
     embed.setThumbnail(resp.hdurl);
     embed.setDescription(resp.explanation);
     channel.send(embed);
+}
+function isUpdated(prevResponse: ULResponse[], currentResponse: ULResponse[]): boolean {
+    if (prevResponse === currentResponse) {
+        return false;
+    } else {
+        return true;
+    }
+}
 
+async function processULResponse(resp: ULResponse, channel: TextChannel) {
+    const embed = new MessageEmbed();
+    embed.setTitle(resp.mission_name);
+    embed.setColor(0x4286f4);
+    embed.setDescription(resp.details);
+    embed.setURL(resp.links.reddit_campaign);
+    if (resp.links.video_link) {
+        embed.addField('YouTube: ', resp.links.video_link);
+    }
+    embed.addField('Rocket: ', resp.rocket.rocket_name);
+    const date = moment(resp.launch_date_local).format('MMMM Do YYYY, h:mm:ss a');
+    embed.setFooter('Launch Date: ' + date);
+    channel.send(embed);
 }
 client.login(token);
