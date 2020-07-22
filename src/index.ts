@@ -9,15 +9,13 @@ import { ULResponse } from './models/SpaceX/UL-Response';
 
 const client = new Client();
 
-let ulCron: string;
-
-let prevULResp: ULResponse[];
+let prevULResp: ULResponse;
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
 });
 client.on('message', (msg) => {
     if (msg.content.startsWith('!')) {
-        // getULRequest(client.channels);
+        getULRequest(client.channels);
     }
 });
 
@@ -34,58 +32,39 @@ cron.schedule('0 12 * * 0-6', async () => { // At 12:00 on every day-of-week fro
 });
 
 cron.schedule('* * * * *', async () => {
-    await getULRequest(client.channels);
-
+    //await getULRequest(client.channels);
 });
 
 async function getULRequest(channels: ChannelManager) {
     const channel = await channels.fetch(chID) as TextChannel;
     const reqURL = 'https://api.spacexdata.com/v3/launches/upcoming';
     let nextMission;
-    if (!prevULResp) {
-        const resp = await Axios.get(reqURL);
-        if (resp.status === 200) {
-            const ulResp = resp.data as ULResponse[];
-            console.log('Successful. Processing now..');
-            const today = new Date().toISOString();
-            const filteredResp = ulResp.filter(upcoming => upcoming.launch_date_utc >= today);
-            nextMission = filteredResp[0];
-            prevULResp = filteredResp;
-            processULResponse(nextMission, channel);
-        } else {
-            const resp = await Axios.get(reqURL);
-            if (resp.status === 200) {
-                const ulResp = resp.data as ULResponse[];
-                console.log('Successful. Processing now..');
-                const today = new Date().toISOString();
-                const filteredResp = ulResp.filter(upcoming => upcoming.launch_date_utc >= today);
-                nextMission = filteredResp[0];
-                if (isUpdated(prevULResp, filteredResp)) {
-                    processULResponse(nextMission, channel);
-                    prevULResp = filteredResp;
-                }
-            } else {
-                apiError(resp, channel);
-            }
 
+    const resp = await Axios.get(reqURL);
+    if (resp.status === 200) {
+        const ulResp = resp.data as ULResponse[];
+        const today = new Date().toISOString();
+        const filteredResp = ulResp.filter(upcoming => upcoming.launch_date_utc >= today);
+        nextMission = filteredResp[0];
+        if (!prevULResp) {
+            prevULResp = nextMission;
         }
+        if (prevULResp !== nextMission) {
+            processULResponse(nextMission, channel);
+            prevULResp = nextMission;
+        }
+    } else {
+        apiError(resp, channel);
     }
 }
 
 async function getAPODReq(req: ApodRequest, channels: ChannelManager) {
     const channel = await channels.fetch(chID) as TextChannel;
-    let apodResponse: APODResponse;
     const url = 'https://api.nasa.gov/planetary/apod?' + 'api_key=' + req.api_key + '&' + 'date=' + req.date + '&' + 'hd=' + req.hd;
     Axios.get(url).then(resp => {
         if (resp.status === 200) {
             console.log('Succesful. Processing now...');
-            apodResponse = {
-                date: resp.data.date,
-                explanation: resp.data.explanation,
-                hdurl: resp.data.hdurl,
-                title: resp.data.title,
-                url: resp.data.url
-            };
+            const apodResponse = resp.data as APODResponse;
             processAPODResponse(apodResponse, channel);
         } else {
             apiError(resp, channel);
@@ -109,13 +88,6 @@ async function processAPODResponse(resp: APODResponse, channel: TextChannel) {
     embed.setThumbnail(resp.hdurl);
     embed.setDescription(resp.explanation);
     channel.send(embed);
-}
-function isUpdated(prevResponse: ULResponse[], currentResponse: ULResponse[]): boolean {
-    if (prevResponse === currentResponse) {
-        return false;
-    } else {
-        return true;
-    }
 }
 
 async function processULResponse(resp: ULResponse, channel: TextChannel) {
