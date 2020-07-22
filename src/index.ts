@@ -9,13 +9,15 @@ import { ULResponse } from './models/SpaceX/UL-Response';
 
 const client = new Client();
 
+let ulCron: string;
+
 let prevULResp: ULResponse[];
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
 });
 client.on('message', (msg) => {
     if (msg.content.startsWith('!')) {
-       // getULRequest(client.channels);
+        // getULRequest(client.channels);
     }
 });
 
@@ -31,9 +33,8 @@ cron.schedule('0 12 * * 0-6', async () => { // At 12:00 on every day-of-week fro
     await getAPODReq(req, client.channels);
 });
 
-cron.schedule('0 10 * * 0-6', async () => {
+cron.schedule('* * * * *', async () => {
     await getULRequest(client.channels);
-
 
 });
 
