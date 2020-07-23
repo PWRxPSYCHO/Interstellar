@@ -10,12 +10,14 @@ import { ULResponse } from './models/SpaceX/UL-Response';
 const client = new Client();
 
 let prevULResp: ULResponse;
+let currentULResp: ULResponse;
+
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
 });
-client.on('message', (msg) => {
+client.on('message', async (msg) => {
     if (msg.content.startsWith('!')) {
-        getULRequest(client.channels);
+        // placeholder
     }
 });
 
@@ -32,27 +34,26 @@ cron.schedule('0 12 * * 0-6', async () => { // At 12:00 on every day-of-week fro
 });
 
 cron.schedule('* * * * *', async () => {
-    //await getULRequest(client.channels);
+    if (!currentULResp) {
+        currentULResp = await getULRequest(client.channels);
+    }
+    if (currentULResp !== prevULResp) {
+        processULResponse(currentULResp, client.channels);
+        prevULResp = currentULResp;
+    }
 });
+
 
 async function getULRequest(channels: ChannelManager) {
     const channel = await channels.fetch(chID) as TextChannel;
     const reqURL = 'https://api.spacexdata.com/v3/launches/upcoming';
-    let nextMission;
-
     const resp = await Axios.get(reqURL);
     if (resp.status === 200) {
         const ulResp = resp.data as ULResponse[];
         const today = new Date().toISOString();
         const filteredResp = ulResp.filter(upcoming => upcoming.launch_date_utc >= today);
-        nextMission = filteredResp[0];
-        if (!prevULResp) {
-            prevULResp = nextMission;
-        }
-        if (prevULResp !== nextMission) {
-            processULResponse(nextMission, channel);
-            prevULResp = nextMission;
-        }
+        const nextMission = filteredResp[0];
+        return nextMission;
     } else {
         apiError(resp, channel);
     }
@@ -63,7 +64,6 @@ async function getAPODReq(req: ApodRequest, channels: ChannelManager) {
     const url = 'https://api.nasa.gov/planetary/apod?' + 'api_key=' + req.api_key + '&' + 'date=' + req.date + '&' + 'hd=' + req.hd;
     Axios.get(url).then(resp => {
         if (resp.status === 200) {
-            console.log('Succesful. Processing now...');
             const apodResponse = resp.data as APODResponse;
             processAPODResponse(apodResponse, channel);
         } else {
@@ -90,12 +90,17 @@ async function processAPODResponse(resp: APODResponse, channel: TextChannel) {
     channel.send(embed);
 }
 
-async function processULResponse(resp: ULResponse, channel: TextChannel) {
+async function processULResponse(resp: ULResponse, channels: ChannelManager) {
+    const channel = await channels.fetch(chID) as TextChannel;
     const embed = new MessageEmbed();
     embed.setTitle(resp.mission_name);
     embed.setColor(0x4286f4);
-    embed.setDescription(resp.details);
-    embed.setURL(resp.links.reddit_campaign);
+    if (resp.details) {
+        embed.setDescription(resp.details);
+    }
+    if (resp.links.reddit_campaign) {
+        embed.setURL(resp.links.reddit_campaign);
+    }
     if (resp.links.video_link) {
         embed.addField('YouTube: ', resp.links.video_link);
     }
