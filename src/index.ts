@@ -33,11 +33,13 @@ cron.schedule('0 12 * * 0-6', async () => { // At 12:00 on every day-of-week fro
     await getAPODReq(req, client.channels);
 });
 
-cron.schedule('* * * * *', async () => {
-    if (!currentULResp) {
-        currentULResp = await getULRequest(client.channels);
+cron.schedule('0 10 * * 0-6', async () => {
+    currentULResp = await getULRequest(client.channels);
+    if (!prevULResp) {
+        processULResponse(currentULResp, client.channels);
+        prevULResp = currentULResp;
     }
-    if (currentULResp !== prevULResp) {
+    if (currentULResp.flight_number != prevULResp.flight_number) {
         processULResponse(currentULResp, client.channels);
         prevULResp = currentULResp;
     }
@@ -52,8 +54,7 @@ async function getULRequest(channels: ChannelManager) {
         const ulResp = resp.data as ULResponse[];
         const today = new Date().toISOString();
         const filteredResp = ulResp.filter(upcoming => upcoming.launch_date_utc >= today);
-        const nextMission = filteredResp[0];
-        return nextMission;
+        return filteredResp[0];
     } else {
         apiError(resp, channel);
     }
