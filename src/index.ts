@@ -21,7 +21,7 @@ client.on('message', async (msg) => {
     }
 });
 
-cron.schedule('0 12 * * 0-6', async () => { // At 12:00 on every day-of-week from Sunday through Saturday.
+cron.schedule('0 12 * * 0-6', async () => {
     console.log('Running At 12:00 on every day-of-week from Sunday through Saturday.');
     const today = new Date();
     const todaysDate = moment(today).format('yyyy-MM-DD').toString();
@@ -45,16 +45,43 @@ cron.schedule('0 10 * * 0-6', async () => {
     }
 });
 
+cron.schedule('0 * * * *', async () => {
+    const today = new Date().toISOString();
+    const todayDate = new Date(today);
+    let ulLaunchDate: Date;
+    if (currentULResp) {
+        ulLaunchDate = new Date(currentULResp.launch_date_utc);
+        if (launchDay(todayDate, ulLaunchDate)) {
+            currentULResp = await getULRequest(client.channels);
+            processULResponse(currentULResp, client.channels);
+            prevULResp = currentULResp;
+        }
+    }
+
+});
+
+function launchDay(today: Date, ulLaunchDate: Date): boolean {
+    if (today.getFullYear() === ulLaunchDate.getFullYear()) {
+        if (today.getMonth() === ulLaunchDate.getMonth()) {
+            if (today.getDate() === ulLaunchDate.getFullYear()) {
+                if (ulLaunchDate.getHours() - today.getHours() === 1) {
+                    return true;
+                }
+            }
+        }
+    } else {
+        return false;
+    }
+
+}
 
 async function getULRequest(channels: ChannelManager) {
     const channel = await channels.fetch(chID) as TextChannel;
-    const reqURL = 'https://api.spacexdata.com/v3/launches/upcoming';
+    const reqURL = 'https://api.spacexdata.com/v3/launches/next';
     const resp = await Axios.get(reqURL);
     if (resp.status === 200) {
-        const ulResp = resp.data as ULResponse[];
-        const today = new Date().toISOString();
-        const filteredResp = ulResp.filter(upcoming => upcoming.launch_date_utc >= today);
-        return filteredResp[0];
+        const ulResp = resp.data as ULResponse;
+        return ulResp;
     } else {
         apiError(resp, channel);
     }
@@ -63,14 +90,13 @@ async function getULRequest(channels: ChannelManager) {
 async function getAPODReq(req: ApodRequest, channels: ChannelManager) {
     const channel = await channels.fetch(chID) as TextChannel;
     const url = 'https://api.nasa.gov/planetary/apod?' + 'api_key=' + req.api_key + '&' + 'date=' + req.date + '&' + 'hd=' + req.hd;
-    Axios.get(url).then(resp => {
-        if (resp.status === 200) {
-            const apodResponse = resp.data as APODResponse;
-            processAPODResponse(apodResponse, channel);
-        } else {
-            apiError(resp, channel);
-        }
-    });
+    const resp = await Axios.get(url);
+    if (resp.status === 200) {
+        const apodResponse = resp.data as APODResponse;
+        processAPODResponse(apodResponse, channel);
+    } else {
+        apiError(resp, channel);
+    }
 }
 function apiError(resp, channel: TextChannel) {
     console.log('Status Code: ' + resp.status);
