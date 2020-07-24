@@ -1,16 +1,15 @@
-import { Client, MessageEmbed, Message, ChannelManager, TextChannel } from 'discord.js';
-import { token, nasaToken, chID } from './models/config';
-import { APODResponse } from './models/APOD/apod-response';
-import Axios from 'axios';
-import { ApodRequest } from './models/APOD/apod-request';
+import { Client } from 'discord.js';
 import moment from 'moment';
 import cron from 'node-cron';
-import { ULResponse } from './models/SpaceX/UL-Response';
+import { ApodRequest } from './models/APOD/apod-request';
+import { nasaToken, token } from './models/config';
+import { NASA } from './nasa';
+import { SpaceX } from './spaceX';
 
 const client = new Client();
 
-let prevULResp: ULResponse;
-let currentULResp: ULResponse;
+const spaceX = new SpaceX();
+const nasa = new NASA();
 
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
@@ -30,18 +29,18 @@ cron.schedule('0 12 * * 0-6', async () => {
         date: todaysDate,
         hd: true
     }
-    await getAPODReq(req, client.channels);
+    await nasa.getAPODReq(req, client.channels);
 });
 
 cron.schedule('0 10 * * 0-6', async () => {
-    currentULResp = await getULRequest(client.channels);
-    if (!prevULResp) {
-        processULResponse(currentULResp, client.channels);
-        prevULResp = currentULResp;
+    spaceX.currentULResp = await spaceX.getULRequest(client.channels);
+    if (!spaceX.prevULResp) {
+        spaceX.processULResponse(spaceX.currentULResp, client.channels);
+        spaceX.prevULResp = spaceX.currentULResp;
     }
-    if (currentULResp.flight_number != prevULResp.flight_number) {
-        processULResponse(currentULResp, client.channels);
-        prevULResp = currentULResp;
+    if (spaceX.currentULResp.flight_number != spaceX.prevULResp.flight_number) {
+        spaceX.processULResponse(spaceX.currentULResp, client.channels);
+        spaceX.prevULResp = spaceX.currentULResp;
     }
 });
 
@@ -49,91 +48,16 @@ cron.schedule('0 * * * *', async () => {
     const today = new Date().toISOString();
     const todayDate = new Date(today);
     let ulLaunchDate: Date;
-    if (currentULResp) {
-        ulLaunchDate = new Date(currentULResp.launch_date_utc);
-        if (launchDay(todayDate, ulLaunchDate)) {
-            currentULResp = await getULRequest(client.channels);
-            processULResponse(currentULResp, client.channels);
-            prevULResp = currentULResp;
+    if (spaceX.currentULResp) {
+        ulLaunchDate = new Date(spaceX.currentULResp.launch_date_utc);
+        if (spaceX.launchDay(todayDate, ulLaunchDate)) {
+            spaceX.currentULResp = await spaceX.getULRequest(client.channels);
+            spaceX.processULResponse(spaceX.currentULResp, client.channels);
+            spaceX.prevULResp = spaceX.currentULResp;
         }
     }
 
 });
 
-function launchDay(today: Date, ulLaunchDate: Date): boolean {
-    if (today.getFullYear() === ulLaunchDate.getFullYear()) {
-        if (today.getMonth() === ulLaunchDate.getMonth()) {
-            if (today.getDate() === ulLaunchDate.getFullYear()) {
-                if (ulLaunchDate.getHours() - today.getHours() === 1) {
-                    return true;
-                }
-            }
-        }
-    } else {
-        return false;
-    }
 
-}
-
-async function getULRequest(channels: ChannelManager) {
-    const channel = await channels.fetch(chID) as TextChannel;
-    const reqURL = 'https://api.spacexdata.com/v3/launches/next';
-    const resp = await Axios.get(reqURL);
-    if (resp.status === 200) {
-        const ulResp = resp.data as ULResponse;
-        return ulResp;
-    } else {
-        apiError(resp, channel);
-    }
-}
-
-async function getAPODReq(req: ApodRequest, channels: ChannelManager) {
-    const channel = await channels.fetch(chID) as TextChannel;
-    const url = 'https://api.nasa.gov/planetary/apod?' + 'api_key=' + req.api_key + '&' + 'date=' + req.date + '&' + 'hd=' + req.hd;
-    const resp = await Axios.get(url);
-    if (resp.status === 200) {
-        const apodResponse = resp.data as APODResponse;
-        processAPODResponse(apodResponse, channel);
-    } else {
-        apiError(resp, channel);
-    }
-}
-function apiError(resp, channel: TextChannel) {
-    console.log('Status Code: ' + resp.status);
-    const embedMessage = new MessageEmbed();
-    embedMessage.setTitle('Failed to fetch APOD!');
-    embedMessage.setColor(0xFF0000);
-    embedMessage.setThumbnail('https://s3.amazonaws.com/digitaltrends-uploads-prod/2015/08/black-hole.jpg');
-    embedMessage.setDescription('Code: ' + (resp.status));
-    channel.send(embedMessage);
-}
-
-async function processAPODResponse(resp: APODResponse, channel: TextChannel) {
-    const embed = new MessageEmbed();
-    embed.setTitle(resp.title);
-    embed.setColor(0x4286f4);
-    embed.setThumbnail(resp.hdurl);
-    embed.setDescription(resp.explanation);
-    channel.send(embed);
-}
-
-async function processULResponse(resp: ULResponse, channels: ChannelManager) {
-    const channel = await channels.fetch(chID) as TextChannel;
-    const embed = new MessageEmbed();
-    embed.setTitle(resp.mission_name);
-    embed.setColor(0x4286f4);
-    if (resp.details) {
-        embed.setDescription(resp.details);
-    }
-    if (resp.links.reddit_campaign) {
-        embed.setURL(resp.links.reddit_campaign);
-    }
-    if (resp.links.video_link) {
-        embed.addField('YouTube: ', resp.links.video_link);
-    }
-    embed.addField('Rocket: ', resp.rocket.rocket_name);
-    const date = moment(resp.launch_date_local).format('MMMM Do YYYY, h:mm:ss a');
-    embed.setFooter('Launch Date: ' + date);
-    channel.send(embed);
-}
 client.login(token);
