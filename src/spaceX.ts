@@ -6,8 +6,27 @@ import { ULResponse } from './models/SpaceX/UL-Response';
 import { Util } from './util';
 
 export class SpaceX {
-    prevULResp: ULResponse;
-    currentULResp: ULResponse;
+    private _prevULResp: ULResponse;
+    private _currentULResp: ULResponse;
+
+
+    public get prevULResponse(): ULResponse {
+        return this._prevULResp;
+    }
+
+    public get currentULResp(): ULResponse {
+        return this._currentULResp;
+    }
+
+    public set prevULResponse(ulResp: ULResponse) {
+        this._prevULResp = ulResp;
+    }
+
+    public set currentULResp(ulResp: ULResponse) {
+        this._currentULResp = ulResp;
+    }
+
+
     readonly util = new Util();
 
 

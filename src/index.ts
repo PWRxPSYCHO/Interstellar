@@ -34,13 +34,13 @@ cron.schedule('0 12 * * 0-6', async () => {
 
 cron.schedule('0 10 * * 0-6', async () => {
     spaceX.currentULResp = await spaceX.getULRequest(client.channels);
-    if (!spaceX.prevULResp) {
+    if (!spaceX.currentULResp) {
         spaceX.processULResponse(spaceX.currentULResp, client.channels);
-        spaceX.prevULResp = spaceX.currentULResp;
+        spaceX.prevULResponse = spaceX.currentULResp;
     }
-    if (spaceX.currentULResp.flight_number != spaceX.prevULResp.flight_number) {
+    if (spaceX.currentULResp.flight_number != spaceX.prevULResponse.flight_number) {
         spaceX.processULResponse(spaceX.currentULResp, client.channels);
-        spaceX.prevULResp = spaceX.currentULResp;
+        spaceX.prevULResponse = spaceX.currentULResp;
     }
 });
 
@@ -53,7 +53,7 @@ cron.schedule('0 * * * *', async () => {
         if (spaceX.launchDay(todayDate, ulLaunchDate)) {
             spaceX.currentULResp = await spaceX.getULRequest(client.channels);
             spaceX.processULResponse(spaceX.currentULResp, client.channels);
-            spaceX.prevULResp = spaceX.currentULResp;
+            spaceX.prevULResponse = spaceX.currentULResp;
         }
     }
 
