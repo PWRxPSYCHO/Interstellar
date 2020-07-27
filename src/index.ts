@@ -16,7 +16,14 @@ client.on('ready', () => {
 });
 client.on('message', async (msg) => {
     if (msg.content.startsWith('!')) {
-        // placeholder
+        const today = new Date();
+        const todaysDate = moment(today).format('yyyy-MM-DD').toString();
+        const req: ApodRequest = {
+            api_key: nasaToken,
+            date: todaysDate,
+            hd: true
+        }
+        await nasa.getAPODReq(req, client.channels);
     }
 });
 

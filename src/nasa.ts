@@ -23,7 +23,12 @@ export class NASA {
         const embed = new MessageEmbed();
         embed.setTitle(resp.title);
         embed.setColor(0x4286f4);
-        embed.setThumbnail(resp.hdurl);
+        if (resp.media_type == "video") {
+            embed.setURL(resp.url);
+        }
+        if (resp.media_type == "image") {
+            embed.setThumbnail(resp.hdurl);
+        }
         embed.setDescription(resp.explanation);
         channel.send(embed);
     }
