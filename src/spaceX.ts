@@ -47,11 +47,14 @@ export class SpaceX {
 
     async getULRequest(channels: ChannelManager) {
         const channel = await channels.fetch(chID) as TextChannel;
-        const reqURL = 'https://api.spacexdata.com/v3/launches/next';
+        const reqURL = 'https://api.spacexdata.com/v3/launches/upcoming';
         const resp = await Axios.get(reqURL);
         if (resp.status === 200) {
-            const ulResp = resp.data as ULResponse;
-            return ulResp;
+            const today = new Date().toISOString();
+            const ulResp = resp.data as ULResponse[];
+            const filteredResp = ulResp.filter(upcoming => upcoming.launch_date_utc >= today);
+            return filteredResp[0];
+
         } else {
             this.util.apiError(resp, channel);
         }
