@@ -16,14 +16,6 @@ client.on('ready', () => {
 });
 client.on('message', async (msg) => {
     if (msg.content.startsWith('!')) {
-        const today = new Date();
-        const todaysDate = moment(today).format('yyyy-MM-DD').toString();
-        const req: ApodRequest = {
-            api_key: nasaToken,
-            date: todaysDate,
-            hd: true
-        }
-        await nasa.getAPODReq(req, client.channels);
     }
 });
 
@@ -41,14 +33,7 @@ cron.schedule('0 12 * * 0-6', async () => {
 
 cron.schedule('0 10 * * 0-6', async () => {
     spaceX.currentULResp = await spaceX.getULRequest(client.channels);
-    if (!spaceX.currentULResp) {
-        spaceX.processULResponse(spaceX.currentULResp, client.channels);
-        spaceX.prevULResponse = spaceX.currentULResp;
-    }
-    if (spaceX.currentULResp.flight_number != spaceX.prevULResponse.flight_number) {
-        spaceX.processULResponse(spaceX.currentULResp, client.channels);
-        spaceX.prevULResponse = spaceX.currentULResp;
-    }
+    spaceX.processULResponse(spaceX.currentULResp, client.channels);
 });
 
 cron.schedule('0 * * * *', async () => {
@@ -60,7 +45,6 @@ cron.schedule('0 * * * *', async () => {
         if (spaceX.launchDay(todayDate, ulLaunchDate)) {
             spaceX.currentULResp = await spaceX.getULRequest(client.channels);
             spaceX.processULResponse(spaceX.currentULResp, client.channels);
-            spaceX.prevULResponse = spaceX.currentULResp;
         }
     }
 

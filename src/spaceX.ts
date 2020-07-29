@@ -6,20 +6,10 @@ import { ULResponse } from './models/SpaceX/UL-Response';
 import { Util } from './util';
 
 export class SpaceX {
-    private _prevULResp: ULResponse;
     private _currentULResp: ULResponse;
-
-
-    public get prevULResponse(): ULResponse {
-        return this._prevULResp;
-    }
 
     public get currentULResp(): ULResponse {
         return this._currentULResp;
-    }
-
-    public set prevULResponse(ulResp: ULResponse) {
-        this._prevULResp = ulResp;
     }
 
     public set currentULResp(ulResp: ULResponse) {
@@ -50,11 +40,10 @@ export class SpaceX {
         const reqURL = 'https://api.spacexdata.com/v3/launches/upcoming';
         const resp = await Axios.get(reqURL);
         if (resp.status === 200) {
-            const today = new Date().toISOString();
+            const today = new Date();
             const ulResp = resp.data as ULResponse[];
-            const filteredResp = ulResp.filter(upcoming => upcoming.launch_date_utc >= today);
+            const filteredResp = ulResp.filter(upcoming => moment(upcoming.launch_date_utc).toDate() >= today);
             return filteredResp[0];
-
         } else {
             this.util.apiError(resp, channel);
         }
