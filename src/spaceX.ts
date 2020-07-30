@@ -41,8 +41,9 @@ export class SpaceX {
         const resp = await Axios.get(reqURL);
         if (resp.status === 200) {
             const today = new Date();
+            const momentDate = moment(today).unix();
             const ulResp = resp.data as ULResponse[];
-            const filteredResp = ulResp.filter(upcoming => moment(upcoming.launch_date_utc).toDate() >= today);
+            const filteredResp = ulResp.filter(upcoming => upcoming.launch_date_unix >= momentDate);
             return filteredResp[0];
         } else {
             this.util.apiError(resp, channel);
@@ -63,7 +64,7 @@ export class SpaceX {
             embed.addField('YouTube: ', resp.links.video_link);
         }
         embed.addField('Rocket: ', resp.rocket.rocket_name);
-        const date = moment(resp.launch_date_local).format('MMMM Do YYYY, h:mm:ss a');
+        const date = moment(resp.launch_date_local).format('LLLL');
         embed.setFooter('Launch Date: ' + date);
         channel.send(embed);
     }
