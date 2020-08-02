@@ -16,6 +16,10 @@ client.on('ready', () => {
 });
 client.on('message', async (msg) => {
     if (msg.content.startsWith('!')) {
+        spaceX.currentULRespV4 = await spaceX.getULRequest(client.channels);
+        spaceX.rocketResponse = await spaceX.getRocket(spaceX.currentULRespV4, client.channels);
+
+        spaceX.processULResponse(spaceX.currentULRespV4, spaceX.rocketResponse, client.channels);
     }
 });
 
@@ -32,19 +36,21 @@ cron.schedule('0 12 * * 0-6', async () => {
 });
 
 cron.schedule('0 10 * * 0-6', async () => {
-    spaceX.currentULResp = await spaceX.getULRequest(client.channels);
-    spaceX.processULResponse(spaceX.currentULResp, client.channels);
+    spaceX.currentULRespV4 = await spaceX.getULRequest(client.channels);
+    spaceX.rocketResponse = await spaceX.getRocket(spaceX.currentULRespV4, client.channels);
+
+    spaceX.processULResponse(spaceX.currentULRespV4, spaceX.rocketResponse, client.channels);
 });
 
 cron.schedule('0 * * * *', async () => {
     const today = new Date().toISOString();
     const todayDate = new Date(today);
     let ulLaunchDate: Date;
-    if (spaceX.currentULResp) {
-        ulLaunchDate = new Date(spaceX.currentULResp.launch_date_utc);
+    if (spaceX.currentULRespV4) {
+        ulLaunchDate = new Date(spaceX.currentULRespV4.date_utc);
         if (spaceX.launchDay(todayDate, ulLaunchDate)) {
-            spaceX.currentULResp = await spaceX.getULRequest(client.channels);
-            spaceX.processULResponse(spaceX.currentULResp, client.channels);
+            spaceX.currentULRespV4 = await spaceX.getULRequest(client.channels);
+            spaceX.processULResponse(spaceX.currentULRespV4, spaceX.rocketResponse, client.channels);
         }
     }
 

@@ -2,20 +2,33 @@ import Axios from 'axios';
 import { ChannelManager, MessageEmbed, TextChannel } from 'discord.js';
 import moment from 'moment';
 import { chID } from './models/config';
-import { ULResponse } from './models/SpaceX/UL-Response';
+import { RocketRespV4 } from './models/SpaceX/Rocket-Response-V4';
 import { Util } from './util';
+import { ULResponseV4 } from './models/SpaceX/Ul-Response-V4';
 
 export class SpaceX {
-    private _currentULResp: ULResponse;
 
-    public get currentULResp(): ULResponse {
-        return this._currentULResp;
+    private _currentULrespV4: ULResponseV4;
+
+    private _rocketResponse: RocketRespV4;
+
+
+    public get currentULRespV4(): ULResponseV4 {
+        return this._currentULrespV4;
     }
 
-    public set currentULResp(ulResp: ULResponse) {
-        this._currentULResp = ulResp;
+    public get rocketResponse(): RocketRespV4 {
+        return this._rocketResponse;
     }
 
+    public set rocketResponse(rocketResponse: RocketRespV4) {
+        this._rocketResponse = rocketResponse;
+    }
+
+
+    public set currentULRespV4(currentULRespV4: ULResponseV4) {
+        this._currentULrespV4 = currentULRespV4;
+    }
 
     readonly util = new Util();
 
@@ -37,34 +50,49 @@ export class SpaceX {
 
     async getULRequest(channels: ChannelManager) {
         const channel = await channels.fetch(chID) as TextChannel;
-        const reqURL = 'https://api.spacexdata.com/v3/launches/upcoming';
+        const reqURL = 'https://api.spacexdata.com/v4/launches/upcoming';
         const resp = await Axios.get(reqURL);
         if (resp.status === 200) {
             const today = new Date();
             const momentDate = moment(today).unix();
-            const ulResp = resp.data as ULResponse[];
-            const filteredResp = ulResp.filter(upcoming => upcoming.launch_date_unix >= momentDate);
+            const ulResp = resp.data as ULResponseV4[];
+            const filteredResp = ulResp.filter(upcoming => upcoming.date_unix >= momentDate);
             return filteredResp[0];
         } else {
             this.util.apiError(resp, channel);
         }
     }
-    async processULResponse(resp: ULResponse, channels: ChannelManager) {
+
+    async getRocket(resp: ULResponseV4, channels: ChannelManager) {
+        const channel = await channels.fetch(chID) as TextChannel;
+        const reqURL = 'https://api.spacexdata.com/v4/rockets/' + resp.rocket;
+
+        const rocketRep = await Axios.get(reqURL);
+        if (rocketRep.status === 200) {
+            return rocketRep.data as RocketRespV4;
+        } else {
+            this.util.apiError(rocketRep, channel);
+        }
+    }
+    async processULResponse(resp: ULResponseV4, rocketResp: RocketRespV4, channels: ChannelManager) {
         const channel = await channels.fetch(chID) as TextChannel;
         const embed = new MessageEmbed();
-        embed.setTitle(resp.mission_name);
+        embed.setTitle(resp.name);
         embed.setColor(0x4286f4);
         if (resp.details) {
             embed.setDescription(resp.details);
         }
-        if (resp.links.reddit_campaign) {
-            embed.setURL(resp.links.reddit_campaign);
+        if (resp.links.reddit) {
+            embed.setURL(resp.links.reddit.campaign);
         }
-        if (resp.links.video_link) {
-            embed.addField('YouTube: ', resp.links.video_link);
+        if (resp.links.webcast) {
+            embed.addField('YouTube: ', resp.links.webcast);
         }
-        embed.addField('Rocket: ', resp.rocket.rocket_name);
-        const date = moment(resp.launch_date_local).format('LLLL');
+        if (resp.links.patch) {
+            embed.setThumbnail(resp.links.patch.large);
+        }
+        embed.addField('Rocket: ', rocketResp.name);
+        const date = moment(resp.date_local).format('LLLL');
         embed.setFooter('Launch Date: ' + date);
         channel.send(embed);
     }
