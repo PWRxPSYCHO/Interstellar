@@ -4,7 +4,7 @@ import moment from 'moment';
 import { chID } from './models/config';
 import { RocketRespV4 } from './models/SpaceX/Rocket-Response-V4';
 import { Util } from './util';
-import { ULResponseV4 } from './models/SpaceX/Ul-Response-V4';
+import { ULResponseV4 } from './models/SpaceX/UL-Response-V4';
 
 export class SpaceX {
 
