@@ -33,21 +33,6 @@ export class SpaceX {
     readonly util = new Util();
 
 
-    launchDay(today: Date, ulLaunchDate: Date): boolean {
-        if (today.getFullYear() === ulLaunchDate.getFullYear()) {
-            if (today.getMonth() === ulLaunchDate.getMonth()) {
-                if (today.getDate() === ulLaunchDate.getFullYear()) {
-                    if (ulLaunchDate.getHours() - today.getHours() === 1) {
-                        return true;
-                    }
-                }
-            }
-        } else {
-            return false;
-        }
-
-    }
-
     async getULRequest(channels: ChannelManager) {
         const channel = await channels.fetch(chID) as TextChannel;
         const reqURL = 'https://api.spacexdata.com/v4/launches/upcoming';
@@ -79,6 +64,7 @@ export class SpaceX {
         const embed = new MessageEmbed();
         embed.setTitle(resp.name);
         embed.setColor(0x4286f4);
+        embed.setAuthor("SpaceX", "https://media-exp1.licdn.com/dms/image/C560BAQEbqLQ-JE0vdQ/company-logo_200_200/0?e=2159024400&v=beta&t=KmtDUngLjKVIqjsjZ9c3IENwunQAGkau3_AZh9rSeOg", "https://docs.spacexdata.com/");
         if (resp.details) {
             embed.setDescription(resp.details);
         }
@@ -93,7 +79,7 @@ export class SpaceX {
         }
         embed.addField('Rocket: ', rocketResp.name);
         const date = moment(resp.date_local).format('LLLL');
-        embed.setFooter('Launch Date: ' + date);
+        embed.setFooter('*Launch Date: *' + date);
         channel.send(embed);
     }
 }

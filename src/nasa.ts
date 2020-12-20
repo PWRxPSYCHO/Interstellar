@@ -22,6 +22,7 @@ export class NASA {
     async processAPODResponse(resp: APODResponse, channel: TextChannel) {
         const embed = new MessageEmbed();
         embed.setTitle(resp.title);
+        embed.setAuthor("NASA", "https://cdn.iconscout.com/icon/free/png-256/nasa-282190.png", "https://www.nasa.gov/");
         embed.setColor(0x4286f4);
         if (resp.media_type == "video") {
             embed.setURL(resp.url);
@@ -30,6 +31,7 @@ export class NASA {
             embed.setThumbnail(resp.hdurl);
         }
         embed.setDescription(resp.explanation);
+        embed.setFooter("NASA APOD API");
         channel.send(embed);
     }
 }

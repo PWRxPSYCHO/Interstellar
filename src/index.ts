@@ -11,18 +11,6 @@ const client = new Client();
 const spaceX = new SpaceX();
 const nasa = new NASA();
 
-client.on('ready', () => {
-    console.log(`Logged in as ${client.user.tag}!`);
-});
-client.on('message', async (msg) => {
-    if (msg.content.startsWith('!')) {
-        spaceX.currentULRespV4 = await spaceX.getULRequest(client.channels);
-        spaceX.rocketResponse = await spaceX.getRocket(spaceX.currentULRespV4, client.channels);
-
-        spaceX.processULResponse(spaceX.currentULRespV4, spaceX.rocketResponse, client.channels);
-    }
-});
-
 cron.schedule('0 12 * * 0-6', async () => {
     console.log('Running At 12:00 on every day-of-week from Sunday through Saturday.');
     const today = new Date();
