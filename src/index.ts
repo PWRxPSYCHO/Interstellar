@@ -30,19 +30,5 @@ cron.schedule('0 10 * * 0-6', async () => {
     spaceX.processULResponse(spaceX.currentULRespV4, spaceX.rocketResponse, client.channels);
 });
 
-cron.schedule('0 * * * *', async () => {
-    const today = new Date().toISOString();
-    const todayDate = new Date(today);
-    let ulLaunchDate: Date;
-    if (spaceX.currentULRespV4) {
-        ulLaunchDate = new Date(spaceX.currentULRespV4.date_utc);
-        if (spaceX.launchDay(todayDate, ulLaunchDate)) {
-            spaceX.currentULRespV4 = await spaceX.getULRequest(client.channels);
-            spaceX.processULResponse(spaceX.currentULRespV4, spaceX.rocketResponse, client.channels);
-        }
-    }
-
-});
-
 
 client.login(token);
