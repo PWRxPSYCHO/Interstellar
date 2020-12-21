@@ -79,7 +79,7 @@ export class SpaceX {
         }
         embed.addField('Rocket: ', rocketResp.name);
         const date = moment(resp.date_local).format('LLLL');
-        embed.setFooter('*Launch Date: *' + date);
+        embed.setFooter('*Launch Date:*' + date);
         channel.send(embed);
     }
 }
