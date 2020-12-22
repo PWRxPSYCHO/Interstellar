@@ -1,5 +1,5 @@
 import { Client } from 'discord.js';
-import { config } from 'dotenv/types';
+import * as env from 'dotenv';
 import moment from 'moment';
 import cron from 'node-cron';
 import { ApodRequest } from './models/APOD/apod-request';
@@ -7,7 +7,7 @@ import { nasaToken, token } from './models/config';
 import { NASA } from './nasa';
 import { SpaceX } from './spaceX';
 
-config();
+env.config();
 const client = new Client();
 
 const spaceX = new SpaceX();
