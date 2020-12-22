@@ -1,21 +1,37 @@
-image: node:latest
-
 stages:
   - build
-  - test
+  - deploy
 
 cache:
   paths:
     - node_modules/
 
 install_dependencies:
+  only:
+    - /^release\/*/
+  tags:
+    - Bots
   stage: build
   script:
     - npm install
-  artifacts:
+  cache:
     paths:
       - node_modules/
 
-testing_testing:
-  stage: test
-  script: npm test
+deploy:
+  stage: deploy
+  tags:
+    - Bots
+  environment:
+    name: RPi Production
+    url: $SERVER_IP
+  only:
+    - /^release\/*/
+  when: manual
+  before_script:
+    - cat $CONFIG >> .env
+    - tsc
+    - sudo /bin/systemctl stop twitch.service
+  script:
+    - sudo /bin/systemctl start twitch.service
+    - service twitch status
