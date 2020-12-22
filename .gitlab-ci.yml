@@ -31,7 +31,7 @@ deploy:
   before_script:
     - cat $CONFIG >> .env
     - tsc
-    - sudo /bin/systemctl stop twitch.service
+    - sudo /bin/systemctl stop interstellar.service
   script:
-    - sudo /bin/systemctl start twitch.service
-    - service twitch status
+    - sudo /bin/systemctl start interstellar.service
+    - service interstellar status
