@@ -5,14 +5,16 @@
   "main": "index.js",
   "scripts": {
     "start": "node dist/index.js",
-    "watch": "tsc -p tsconfig.json -w",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "watch": "tsc -p tsconfig.json -w"
   },
   "dependencies": {
+    "@types/mocha": "^8.0.0",
     "@types/node": "^14.0.23",
+    "axios": "^0.19.2",
     "commonjs": "0.0.1",
     "discord.js": "^12.2.0",
     "moment": "^2.27.0",
+    "node-cron": "^2.0.3",
     "tslib": "^2.0.0",
     "typescript": "^3.9.6"
   }
