@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@types/mocha": "^8.2.3",
-    "@types/node": "^14.0.23",
+    "@types/node": "^14.17.34",
     "axios": "^0.21.3",
     "commonjs": "0.0.1",
     "discord.js": "^12.5.3",
