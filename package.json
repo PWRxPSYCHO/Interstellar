@@ -16,7 +16,7 @@
     "dotenv": "^8.6.0",
     "moment": "^2.27.0",
     "node-cron": "^2.0.3",
-    "tslib": "^2.0.0",
+    "tslib": "^2.3.1",
     "typescript": "^3.9.6"
   }
 }
