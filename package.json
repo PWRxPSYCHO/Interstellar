@@ -9,14 +9,14 @@
   },
   "dependencies": {
     "@types/mocha": "^8.2.3",
-    "@types/node": "^14.17.34",
+    "@types/node": "^14.18.0",
     "axios": "^0.24.0",
     "commonjs": "0.0.1",
     "discord.js": "^12.5.3",
     "dotenv": "^8.6.0",
-    "moment": "^2.27.0",
+    "moment": "^2.29.2",
     "node-cron": "^2.0.3",
     "tslib": "^2.3.1",
-    "typescript": "^3.9.6"
+    "typescript": "^3.9.10"
   }
 }
