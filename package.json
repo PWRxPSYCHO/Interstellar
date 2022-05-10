@@ -12,6 +12,7 @@
     "@discordjs/rest": "^0.4.1",
     "@types/mocha": "^8.2.3",
     "@types/node": "^14.18.0",
+    "@types/ws": "^8.5.3",
     "axios": "^0.24.0",
     "commonjs": "0.0.1",
     "discord-api-types": "^0.32.1",

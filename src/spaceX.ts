@@ -8,9 +8,9 @@ import { ULResponseV4 } from './models/SpaceX/UL-Response-V4';
 
 export class SpaceX {
 
-    private _currentULrespV4: ULResponseV4;
+    private _currentULrespV4!: ULResponseV4;
 
-    private _rocketResponse: RocketRespV4;
+    private _rocketResponse!: RocketRespV4;
 
 
     public get currentULRespV4(): ULResponseV4 {
@@ -33,7 +33,7 @@ export class SpaceX {
     readonly util = new Util();
 
 
-    async getULRequest(channels: ChannelManager) {
+    async getULRequest(channels: ChannelManager): Promise<ULResponseV4 | null> {
         const channel = await channels.fetch(chID) as TextChannel;
         const reqURL = 'https://api.spacexdata.com/v4/launches/upcoming';
         const resp = await Axios.get(reqURL);
@@ -45,10 +45,11 @@ export class SpaceX {
             return filteredResp[0];
         } else {
             this.util.apiError(resp, channel);
+            return null;
         }
     }
 
-    async getRocket(resp: ULResponseV4, channels: ChannelManager) {
+    async getRocket(resp: ULResponseV4, channels: ChannelManager): Promise<RocketRespV4 | null> {
         const channel = await channels.fetch(chID) as TextChannel;
         const reqURL = 'https://api.spacexdata.com/v4/rockets/' + resp.rocket;
 
@@ -57,6 +58,7 @@ export class SpaceX {
             return rocketRep.data as RocketRespV4;
         } else {
             this.util.apiError(rocketRep, channel);
+            return null;
         }
     }
     async processULResponse(resp: ULResponseV4, rocketResp: RocketRespV4, channels: ChannelManager) {
@@ -68,7 +70,7 @@ export class SpaceX {
         if (resp.details) {
             embed.setDescription(resp.details);
         }
-        if (resp.links.reddit) {
+        if (resp.links.reddit && resp.links.reddit.campaign) {
             embed.setURL(resp.links.reddit.campaign);
         }
         if (resp.links.webcast) {

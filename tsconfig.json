@@ -16,7 +16,7 @@
             "node_modules/@types"
         ],
         "rootDir": "src",
-        "strict": false,
+        "strict": true,
         "types": [
             "node"
         ],
