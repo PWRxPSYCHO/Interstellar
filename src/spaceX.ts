@@ -1,5 +1,5 @@
 import Axios from 'axios';
-import { ChannelManager, MessageEmbed, TextChannel } from 'discord.js';
+import { ChannelManager, EmbedAuthorData, EmbedFooterData, MessageEmbed, TextChannel } from 'discord.js';
 import moment from 'moment';
 import { chID } from './models/config';
 import { RocketRespV4 } from './models/SpaceX/Rocket-Response-V4';
@@ -66,7 +66,11 @@ export class SpaceX {
         const embed = new MessageEmbed();
         embed.setTitle(resp.name);
         embed.setColor(0x4286f4);
-        embed.setAuthor("SpaceX", "https://media-exp1.licdn.com/dms/image/C560BAQEbqLQ-JE0vdQ/company-logo_200_200/0?e=2159024400&v=beta&t=KmtDUngLjKVIqjsjZ9c3IENwunQAGkau3_AZh9rSeOg", "https://docs.spacexdata.com/");
+        embed.setAuthor({
+            name: `SpaceX`,
+            iconURL: 'https://media-exp1.licdn.com/dms/image/C560BAQEbqLQ-JE0vdQ/company-logo_200_200/0?e=2159024400&v=beta&t=KmtDUngLjKVIqjsjZ9c3IENwunQAGkau3_AZh9rSeOg',
+            url: 'https://docs.spacexdata.com/'
+        } as EmbedAuthorData);
         if (resp.details) {
             embed.setDescription(resp.details);
         }
@@ -80,8 +84,8 @@ export class SpaceX {
             embed.setThumbnail(resp.links.patch.large);
         }
         embed.addField('Rocket: ', rocketResp.name);
-        const date = moment(resp.date_local).format('LLLL');
-        embed.setFooter('*Launch Date:*' + date);
-        channel.send(embed);
+        const date = moment(resp.date_local).format('LLLL'); 
+        embed.setFooter({ text: `*Launch Date:* ${date}` } as EmbedFooterData);
+        channel.send({ embeds: [embed] });
     }
 }
