@@ -1,5 +1,5 @@
 import { Client } from 'discord.js';
-import { config } from 'dotenv/types';
+import { config } from 'dotenv';
 import moment from 'moment';
 import cron from 'node-cron';
 import { ApodRequest } from './models/APOD/apod-request';

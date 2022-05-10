@@ -105,3 +105,6 @@ dist
 
 # VsCode
 *.code-workspace
+
+# Snyk
+.dccache
