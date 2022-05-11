@@ -98,9 +98,6 @@ export class SpaceX {
         if (resp.details) {
             embed.setDescription(resp.details);
         }
-        if (resp.links.reddit && resp.links.reddit.campaign) {
-            embed.setURL(resp.links.reddit.campaign);
-        }
         if (resp.links.webcast) {
             embed.addField('YouTube: ', resp.links.webcast);
         }
