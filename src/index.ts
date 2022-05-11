@@ -1,4 +1,4 @@
-import { Client } from 'discord.js';
+import { Client, Intents } from 'discord.js';
 import { config } from 'dotenv';
 import moment from 'moment';
 import cron from 'node-cron';
@@ -10,7 +10,7 @@ import { NASA } from './nasa';
 import { SpaceX } from './spaceX';
 
 config();
-const client = new Client();
+const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
 
 const spaceX = new SpaceX();
 const nasa = new NASA();
@@ -25,6 +25,7 @@ client.once("shardReconnecting", id => {
 });
 
 client.once("shardDisconnect", (event, shardID) => {
+
     console.log(`Disconnected from event ${event} with ID ${shardID}`);
 });
 
@@ -40,12 +41,23 @@ cron.schedule('0 12 * * 0-6', async () => {
     await nasa.getAPODReq(req, client.channels);
 });
 
+//
 cron.schedule('0 10 * * 0-6', async () => {
     spaceX.currentULRespV4 = await spaceX.getULRequest(client.channels) as ULResponseV4;
     spaceX.rocketResponse = await spaceX.getRocket(spaceX.currentULRespV4, client.channels) as RocketRespV4;
 
     spaceX.processULResponse(spaceX.currentULRespV4, spaceX.rocketResponse, client.channels);
 });
+
+cron.schedule('* * * * *', async () => {
+    if (spaceX.currentULRespV4 !== null) {
+        if (spaceX.currentULRespV4.date_unix === Math.floor((Date.now() / 1000))) {
+            // process flight response
+
+        }
+    }
+
+})
 
 
 client.login(token);

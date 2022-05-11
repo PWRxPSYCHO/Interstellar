@@ -10,6 +10,6 @@ export class Util {
         embedMessage.setColor(0xFF0000);
         embedMessage.setThumbnail('https://s3.amazonaws.com/digitaltrends-uploads-prod/2015/08/black-hole.jpg');
         embedMessage.setDescription('Code: ' + (resp.status));
-        channel.send(embedMessage);
+        channel.send({ embeds: [embedMessage] });
     }
 }

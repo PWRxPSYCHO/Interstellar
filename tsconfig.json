@@ -1,6 +1,7 @@
 {
     "compileOnSave": true,
     "compilerOptions": {
+        "skipLibCheck": true,
         "experimentalDecorators": true,
         "importHelpers": true,
         "emitDecoratorMetadata": true,
@@ -25,5 +26,5 @@
     },
     "exclude": [
         "node_modules"
-    ]
+    ],
 }
