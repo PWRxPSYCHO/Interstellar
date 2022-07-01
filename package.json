@@ -8,8 +8,8 @@
     "watch": "tsc -p tsconfig.json -w"
   },
   "dependencies": {
-    "@discordjs/builders": "^0.14.0",
-    "@discordjs/rest": "^0.4.1",
+   "@discordjs/builders": "^0.14.0",
+    "@discordjs/rest": "^0.5.0",
     "@types/mocha": "^8.2.3",
     "@types/node": "^14.18.20",
     "@types/ws": "^8.5.3",
