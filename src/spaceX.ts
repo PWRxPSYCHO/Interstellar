@@ -1,11 +1,12 @@
 import Axios from 'axios';
-import { ChannelManager, EmbedAuthorData, EmbedField, EmbedFieldData, EmbedFooterData, MessageEmbed, TextChannel } from 'discord.js';
+import { ChannelManager, EmbedAuthorData, EmbedField, EmbedFooterData, TextChannel } from 'discord.js';
 import moment from 'moment';
 import { chID } from './models/config';
 import { RocketRespV4 } from './models/SpaceX/Rocket-Response-V4';
 import { Util } from './util';
 import { ULResponseV4 } from './models/SpaceX/UL-Response-V4';
 import { LaunchpadResponseV4 } from './models/SpaceX/Launchpad-Response-V4';
+import { EmbedBuilder } from '@discordjs/builders';
 
 export class SpaceX {
 
@@ -87,7 +88,7 @@ export class SpaceX {
     }
     async processULResponse(resp: ULResponseV4, rocketResp: RocketRespV4, channels: ChannelManager) {
         const channel = await channels.fetch(chID) as TextChannel;
-        const embed = new MessageEmbed();
+        const embed = new EmbedBuilder();
         embed.setTitle(resp.name);
         embed.setColor(0x4286f4);
         embed.setAuthor({
@@ -99,7 +100,7 @@ export class SpaceX {
             embed.setDescription(resp.details);
         }
         if (resp.links.webcast) {
-            embed.addField('YouTube: ', resp.links.webcast);
+            embed.addFields({ name: 'YouTube: ', value: resp.links.webcast } as EmbedField);
         }
         if (resp.links.patch) {
             embed.setThumbnail(resp.links.patch.large);
@@ -119,6 +120,6 @@ export class SpaceX {
         //embed.addField('Rocket: ', rocketResp.name);
         const date = moment(resp.date_local).format('LLLL'); 
         embed.setFooter({ text: `Launch Date: ${date}` } as EmbedFooterData);
-        channel.send({ embeds: [embed] });
+        channel.send({ content: '', embeds: [embed], });
     }
 }

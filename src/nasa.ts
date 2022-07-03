@@ -1,5 +1,6 @@
+import { EmbedBuilder } from '@discordjs/builders';
 import Axios from 'axios';
-import { ChannelManager, EmbedAuthorData, EmbedFooterData, MessageEmbed, TextChannel } from 'discord.js';
+import { ChannelManager, EmbedAuthorData, EmbedFooterData, MessagePayload, MessageTarget, TextChannel } from 'discord.js';
 import { ApodRequest } from './models/APOD/apod-request';
 import { APODResponse } from './models/APOD/apod-response';
 import { chID } from './models/config';
@@ -20,7 +21,7 @@ export class NASA {
         }
     }
     async processAPODResponse(resp: APODResponse, channel: TextChannel) {
-        const embed = new MessageEmbed();
+        const embed = new EmbedBuilder();
         embed.setTitle(resp.title);
         embed.setAuthor({ name: "NASA", iconURL: "https://cdn.iconscout.com/icon/free/png-256/nasa-282190.png", url: "https://www.nasa.gov/" } as EmbedAuthorData);
         embed.setColor(0x4286f4);
@@ -32,6 +33,6 @@ export class NASA {
         }
         embed.setDescription(resp.explanation);
         embed.setFooter({ text: "NASA APOD API" } as EmbedFooterData);
-        channel.send({ embeds: [embed] });
+        channel.send({ content: '', embeds: [embed], });
     }
 }

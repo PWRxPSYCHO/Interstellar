@@ -1,16 +1,16 @@
-import { Client, Intents } from 'discord.js';
-import { config } from 'dotenv';
+import { Client, } from 'discord.js';
+import * as env from 'dotenv';
 import moment from 'moment';
 import cron from 'node-cron';
 import { ApodRequest } from './models/APOD/apod-request';
-import { nasaToken, token } from './models/config';
+import { token } from './models/config';
 import { RocketRespV4 } from './models/SpaceX/Rocket-Response-V4';
 import { ULResponseV4 } from './models/SpaceX/UL-Response-V4';
 import { NASA } from './nasa';
 import { SpaceX } from './spaceX';
 
-config();
-const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
+env.config();
+const client = new Client({ intents: [] });
 
 const spaceX = new SpaceX();
 const nasa = new NASA();
@@ -28,13 +28,12 @@ client.once("shardDisconnect", (event, shardID) => {
 
     console.log(`Disconnected from event ${event} with ID ${shardID}`);
 });
-
 cron.schedule('0 12 * * 0-6', async () => {
     console.log('Running At 12:00 on every day-of-week from Sunday through Saturday.');
     const today = new Date();
     const todaysDate = moment(today).format('yyyy-MM-DD').toString();
     const req: ApodRequest = {
-        api_key: nasaToken,
+        api_key: process.env.API_KEY as string,
         date: todaysDate,
         hd: true
     }
@@ -49,15 +48,15 @@ cron.schedule('0 10 * * 0-6', async () => {
     spaceX.processULResponse(spaceX.currentULRespV4, spaceX.rocketResponse, client.channels);
 });
 
-cron.schedule('* * * * *', async () => {
-    if (spaceX.currentULRespV4 !== null) {
-        if (spaceX.currentULRespV4.date_unix === Math.floor((Date.now() / 1000))) {
-            // process flight response
+// cron.schedule('* * * * *', async () => {
+//     if (spaceX.currentULRespV4 !== null) {
+//         if (spaceX.currentULRespV4.date_unix === Math.floor((Date.now() / 1000))) {
+//             // process flight response
 
-        }
-    }
+//         }
+//     }
 
-})
+// })
 
 
 client.login(token);
