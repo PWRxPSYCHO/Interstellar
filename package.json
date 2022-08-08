@@ -9,7 +9,7 @@
   },
   "dependencies": {
    "@discordjs/builders": "^0.15.0",
-    "@discordjs/rest": "^0.5.0",
+    "@discordjs/rest": "^0.6.0",
     "@types/mocha": "^8.2.3",
     "@types/node": "^14.18.20",
     "@types/ws": "^8.5.3",
